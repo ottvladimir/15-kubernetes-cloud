@@ -15,8 +15,11 @@ resource "yandex_vpc_subnet" "ya-network-private" {
   zone           = "ru-central1-a"
   network_id     = yandex_vpc_network.ya-network.id
   v4_cidr_blocks = ["192.168.20.0/24"]
+  route_table_id = yandex_vpc_route_table.route-table.id
+  
 }
-resource "yandex_vpc_route_table" "route" {
+resource "yandex_vpc_route_table" "route-table" {
+  name = "nat-route"
   network_id = yandex_vpc_network.ya-network.id
 
   static_route {
