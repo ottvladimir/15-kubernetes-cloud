@@ -1,29 +1,72 @@
 # Домашнее задание к занятию "15.1. Организация сети"
 
-Домашнее задание будет состоять из обязательной части, которую необходимо выполнить на провайдере Яндекс.Облако и дополнительной части в AWS по желанию. Все домашние задания в 15 блоке связаны друг с другом и в конце представляют пример законченной инфраструктуры.  
-Все задания требуется выполнить с помощью Terraform, результатом выполненного домашнего задания будет код в репозитории. 
+после terraform apply 
 
-Перед началом работ следует настроить доступ до облачных ресурсов из Terraform используя материалы прошлых лекций и [ДЗ](https://github.com/netology-code/virt-homeworks/tree/master/07-terraform-02-syntax ). А также заранее выбрать регион (в случае AWS) и зону.
 
----
-## Задание 1. Яндекс.Облако (обязательное к выполнению)
 
-1. Создать VPC.
-- Создать пустую VPC. Выбрать зону.
-2. Публичная подсеть.
-- Создать в vpc subnet с названием public, сетью 192.168.10.0/24.
-- Создать в этой подсети NAT-инстанс, присвоив ему адрес 192.168.10.254. В качестве image_id использовать fd80mrhj8fl2oe87o4e1
-- Создать в этой публичной подсети виртуалку с публичным IP и подключиться к ней, убедиться что есть доступ к интернету.
-3. Приватная подсеть.
-- Создать в vpc subnet с названием private, сетью 192.168.20.0/24.
-- Создать route table. Добавить статический маршрут, направляющий весь исходящий трафик private сети в NAT-инстанс
-- Создать в этой приватной подсети виртуалку с внутренним IP, подключиться к ней через виртуалку, созданную ранее и убедиться что есть доступ к интернету
+```bash
+vladimir@node1:~/15-kubernetes-cloud/15.1$ ssh ubuntu@51.250.4.4
+Welcome to Ubuntu 18.04.1 LTS (GNU/Linux 4.15.0-29-generic x86_64)
 
-Resource terraform для ЯО
-- [VPC subnet](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/vpc_subnet)
-- [Route table](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/vpc_route_table)
-- [Compute Instance](https://registry.terraform.io/providers/yandex-cloud/yandex/latest/docs/resources/compute_instance)
----
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+New release '20.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+
+#################################################################
+This instance runs Yandex.Cloud Marketplace product
+Please wait while we configure your product...
+
+Documentation for Yandex Cloud Marketplace images available at https://cloud.yandex.ru/docs
+
+#################################################################
+
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+ubuntu@fhmr6siprhmbufs3s98a:~$ ssh ubuntu@192.168.20.10
+The authenticity of host '192.168.20.10 (192.168.20.10)' can't be established.
+ECDSA key fingerprint is SHA256:W81M0nGTOev1r71n3mm1IstdtpyZWosHIxkw/mod6tM.
+Are you sure you want to continue connecting (yes/no)? yes
+Warning: Permanently added '192.168.20.10' (ECDSA) to the list of known hosts.
+Welcome to Ubuntu 18.04.1 LTS (GNU/Linux 4.15.0-29-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+
+
+#################################################################
+This instance runs Yandex.Cloud Marketplace product
+Please wait while we configure your product...
+
+Documentation for Yandex Cloud Marketplace images available at https://cloud.yandex.ru/docs
+
+#################################################################
+
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+ubuntu@fhm55p5ojnpq6qspv1b3:~$ ping ya.ru
+PING ya.ru (87.250.250.242) 56(84) bytes of data.
+64 bytes from ya.ru (87.250.250.242): icmp_seq=1 ttl=56 time=1.69 ms
+64 bytes from ya.ru (87.250.250.242): icmp_seq=2 ttl=56 time=0.814 ms
+64 bytes from ya.ru (87.250.250.242): icmp_seq=3 ttl=56 time=0.898 ms
+64 bytes from ya.ru (87.250.250.242): icmp_seq=4 ttl=56 time=0.830 ms
+```
 ## Задание 2*. AWS (необязательное к выполнению)
 
 1. Создать VPC.
