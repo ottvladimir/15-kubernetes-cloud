@@ -26,7 +26,7 @@ resource "yandex_compute_instance_group" "web" {
       label3 = "label3"
     }
     metadata = {
-      user-date  = "echo -e '<html>\n<html>\n\t<body>\n\t\t<h1>Hello from $hostname!</h1>\n\t</body>\n</html>' > /var/www/html/index.html"
+      user-data  = "echo -e '<html>\n<html>\n\t<body>\n\t\t<h1>Hello from $hostname!</h1>\n\t</body>\n</html>' > /var/www/html/index.html"
       ssh-keys = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
     }
     network_settings {
