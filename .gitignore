@@ -5,7 +5,7 @@ cal .terraform directories
 # .tfstate files
 *.tfstate
 *.tfstate.*
-
+*.tf.bak
 # Crash log files
 crash.log
 
