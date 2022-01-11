@@ -2,7 +2,7 @@ resource "yandex_compute_instance_group" "web" {
   name                = "netology-ig"
   folder_id           = var.yc_folder_id
   service_account_id  = yandex_iam_service_account.storage.id
-  deletion_protection = true
+  deletion_protection = false
   instance_template {
     platform_id = "standard-v1"
     resources {
