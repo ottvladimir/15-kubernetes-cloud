@@ -26,7 +26,7 @@ resource "yandex_compute_instance_group" "web" {
       label3 = "label3"
     }
     metadata = {
-      user-data  = "echo -e '<html>\n<html>\n\t<body>\n\t\t<h1>Hello from $hostname!</h1>\n\t</body>\n</html>' > /var/www/html/index.html"
+      user-data  = "${file("cloudconfig.yml")}" 
       ssh-keys = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
     }
     network_settings {
@@ -55,5 +55,9 @@ resource "yandex_compute_instance_group" "web" {
     max_creating    = 2
     max_expansion   = 2
     max_deleting    = 2
+  }
+  load_balancer {
+    target_group_name        = "target-group"
+    target_group_description = "load balancer target group"
   }
 }
