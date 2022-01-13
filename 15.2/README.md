@@ -1,92 +1,137 @@
-# Домашнее задание к занятию "15.1. Организация сети"
+Домашнее задание к занятию 15.2 "Вычислительные мощности. Балансировщики нагрузки".
 
-после terraform apply 
+1. Создаю bucket Object Storage и размещаю там файл с картинкой:  
+ ```tf
+ locals {
+   username = "vladimir"
+   }
 
+// Create SA
+resource "yandex_iam_service_account" "storage" {
+  folder_id = var.yc_folder_id
+  name      = "storage"
+}
 
+// Grant permissions
+resource "yandex_resourcemanager_folder_iam_member" "stor-editor" {
+  folder_id = var.yc_folder_id
+  role      = "editor"
+  member    = "serviceAccount:${yandex_iam_service_account.storage.id}"
+}
 
-```bash
-vladimir@node1:~/15-kubernetes-cloud/15.1$ ssh ubuntu@51.250.4.4
-Welcome to Ubuntu 18.04.1 LTS (GNU/Linux 4.15.0-29-generic x86_64)
+// Create Static Access Keys
+resource "yandex_iam_service_account_static_access_key" "stor-static-key" {
+  service_account_id = yandex_iam_service_account.storage.id
+  description        = "static access key for object storage"
+}
 
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
-New release '20.04.3 LTS' available.
-Run 'do-release-upgrade' to upgrade to it.
-
-
-
-#################################################################
-This instance runs Yandex.Cloud Marketplace product
-Please wait while we configure your product...
-
-Documentation for Yandex Cloud Marketplace images available at https://cloud.yandex.ru/docs
-
-#################################################################
-
-To run a command as administrator (user "root"), use "sudo <command>".
-See "man sudo_root" for details.
-
-ubuntu@fhmr6siprhmbufs3s98a:~$ ssh ubuntu@192.168.20.10
-The authenticity of host '192.168.20.10 (192.168.20.10)' can't be established.
-ECDSA key fingerprint is SHA256:W81M0nGTOev1r71n3mm1IstdtpyZWosHIxkw/mod6tM.
-Are you sure you want to continue connecting (yes/no)? yes
-Warning: Permanently added '192.168.20.10' (ECDSA) to the list of known hosts.
-Welcome to Ubuntu 18.04.1 LTS (GNU/Linux 4.15.0-29-generic x86_64)
-
- * Documentation:  https://help.ubuntu.com
- * Management:     https://landscape.canonical.com
- * Support:        https://ubuntu.com/advantage
-
-
-
-#################################################################
-This instance runs Yandex.Cloud Marketplace product
-Please wait while we configure your product...
-
-Documentation for Yandex Cloud Marketplace images available at https://cloud.yandex.ru/docs
-
-#################################################################
-
-
-The programs included with the Ubuntu system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
-
-Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
-applicable law.
-
-To run a command as administrator (user "root"), use "sudo <command>".
-See "man sudo_root" for details.
-
-ubuntu@fhm55p5ojnpq6qspv1b3:~$ ping ya.ru
-PING ya.ru (87.250.250.242) 56(84) bytes of data.
-64 bytes from ya.ru (87.250.250.242): icmp_seq=1 ttl=56 time=1.69 ms
-64 bytes from ya.ru (87.250.250.242): icmp_seq=2 ttl=56 time=0.814 ms
-64 bytes from ya.ru (87.250.250.242): icmp_seq=3 ttl=56 time=0.898 ms
-64 bytes from ya.ru (87.250.250.242): icmp_seq=4 ttl=56 time=0.830 ms
+// Cоздаю bucket в Object Storage с генерируемым именем;
+resource "yandex_storage_bucket" "my_storage" {
+  access_key = yandex_iam_service_account_static_access_key.stor-static-key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.stor-static-key.secret_key
+  bucket = "bucket-${var.username}-${formatdate("DD-MM-YYYY",timestamp())}"
+}
+// Ложу файл с картинкой и делаю доступным из Интернет;
+resource "yandex_storage_object" "picture" {
+   access_key = yandex_iam_service_account_static_access_key.stor-static-key.access_key
+   secret_key = yandex_iam_service_account_static_access_key.stor-static-key.secret_key
+   bucket = yandex_storage_bucket.my_storage.bucket 
+   key = "image.jpg"
+   source = "./01-1.png"
+   acl = "public-read"
+  }
 ```
-## Задание 2*. AWS (необязательное к выполнению)
+2. Создать группу ВМ в public подсети фиксированного размера с шаблоном LAMP и web-страничкой, содержащей ссылку на картинку из bucket:
+```tf 
+// Создаю Instance Group с 3 ВМ и шаблоном LAMP
+resource "yandex_compute_instance_group" "web" {
+  name                = "netology-ig"
+  folder_id           = var.yc_folder_id
+  service_account_id  = yandex_iam_service_account.storage.id
+  deletion_protection = false
+  instance_template {
+    platform_id = "standard-v1"
+    resources {
+      memory = 2
+      cores  = 2
+    }
+    boot_disk {
+      mode = "READ_WRITE"
+      initialize_params {
+        image_id = "fd827b91d99psvq5fjit"
+        size     = 4
+      }
+    }
+    network_interface {
+      subnet_ids = [yandex_vpc_subnet.ya-network-public.id]
+      nat = true
+    }
+    labels = {
+      label1 = "label1"
+      label2 = "label2"
+      label3 = "label3"
+    }
+    //
+    metadata = {
+      user-data  = "${file("cloudconfig.yml")}" 
+      ssh-keys = "ubuntu:${file("~/.ssh/id_rsa.pub")}"
+    }
+    network_settings {
+      type = "STANDARD"
+    }
+  }
 
-1. Создать VPC.
-- Cоздать пустую VPC с подсетью 10.10.0.0/16.
-2. Публичная подсеть.
-- Создать в vpc subnet с названием public, сетью 10.10.1.0/24
-- Разрешить в данной subnet присвоение public IP по-умолчанию. 
-- Создать Internet gateway 
-- Добавить в таблицу маршрутизации маршрут, направляющий весь исходящий трафик в Internet gateway.
-- Создать security group с разрешающими правилами на SSH и ICMP. Привязать данную security-group на все создаваемые в данном ДЗ виртуалки
-- Создать в этой подсети виртуалку и убедиться, что инстанс имеет публичный IP. Подключиться к ней, убедиться что есть доступ к интернету.
-- Добавить NAT gateway в public subnet.
-3. Приватная подсеть.
-- Создать в vpc subnet с названием private, сетью 10.10.2.0/24
-- Создать отдельную таблицу маршрутизации и привязать ее к private-подсети
-- Добавить Route, направляющий весь исходящий трафик private сети в NAT.
-- Создать виртуалку в приватной сети.
-- Подключиться к ней по SSH по приватному IP через виртуалку, созданную ранее в публичной подсети и убедиться, что с виртуалки есть выход в интернет.
+  variables = {
+    test_key1 = "test_value1"
+    test_key2 = "test_value2"
+    test_key3 = "test_value3"
+  }
 
-Resource terraform
-- [VPC](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc)
-- [Subnet](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet)
-- [Internet Gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/internet_gateway)
+  scale_policy {
+    fixed_scale {
+      size = 3
+    }
+  }
+
+  allocation_policy {
+    zones = ["ru-central1-a"]
+  }
+
+  deploy_policy {
+    max_unavailable = 2
+    max_creating    = 2
+    max_expansion   = 2
+    max_deleting    = 2
+  }
+  // Loadbalancer
+  load_balancer {
+    target_group_name        = "target-group"
+    target_group_description = "load balancer target group"
+  }
+}
+```
+Сетевой балансировщик
+```tf
+resource "yandex_lb_network_load_balancer" "ig-load-balancer" {
+  name = "ig-load-balancer"
+
+  listener {
+    name = "ig-listener"
+    port = 80
+    external_address_spec {
+      ip_version = "ipv4"
+    }
+  }
+
+  attached_target_group {
+    target_group_id = yandex_compute_instance_group.web.load_balancer[0].target_group_id
+
+    healthcheck {
+      name = "http"
+      http_options {
+       port = 80
+      }
+    }
+  }
+}
+```
