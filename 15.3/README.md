@@ -2,7 +2,7 @@
 
 ---
 ## Задание 1. Яндекс.Облако (обязательное к выполнению)
-- Создаю ключ в KMS kms.tf
+- Создаю ключ в KMS [kms.tf](https://github.com/ottvladimir/15-kubernetes-cloud/blob/main/15.3/kms.tf)
 ```tf
 resource "yandex_kms_symmetric_key" "key-a" {
   name              = "key"
@@ -11,7 +11,7 @@ resource "yandex_kms_symmetric_key" "key-a" {
   rotation_period   = "8760h" // equal to 1 year
 ```
 
-- С помощью ключа шифрую содержимое бакета, созданного ранее bucket.tf
+- С помощью ключа шифрую содержимое бакета, созданного ранее [bucket.tf](https://github.com/ottvladimir/15-kubernetes-cloud/blob/main/15.3/bucket.tf)
 ```tf
 locals {
    username = "vladimir"
