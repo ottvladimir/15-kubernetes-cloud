@@ -7,19 +7,19 @@ resource "yandex_vpc_subnet" "ya-network-pub-a" {
   name           = "public-a"
   zone           = "ru-central1-a"
   network_id     = yandex_vpc_network.ya-network.id
-  v4_cidr_blocks = ["192.168.0.0/24"]
+  v4_cidr_blocks = ["172.28.0.0/24"]
 }
 resource "yandex_vpc_subnet" "ya-network-pub-b" {
   name           = "public-b"
   zone           = "ru-central1-b"
   network_id     = yandex_vpc_network.ya-network.id
-  v4_cidr_blocks = ["192.168.0.0/24"]
+  v4_cidr_blocks = ["172.28.10.0/24"]
 }
 resource "yandex_vpc_subnet" "ya-network-pub-c" {
   name           = "public-c"
   zone           = "ru-central1-c"
   network_id     = yandex_vpc_network.ya-network.id
-  v4_cidr_blocks = ["192.168.0.0/24"]
+  v4_cidr_blocks = ["172.28.20.0/24"]
 }
 # Create ya.cloud private subnet
 resource "yandex_vpc_subnet" "ya-network-a" {

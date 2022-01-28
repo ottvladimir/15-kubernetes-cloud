@@ -1,5 +1,5 @@
-resource "yandex_kubernetes_cluster" "regional_cluster_resource_name" {
-  name        = "name"
+resource "yandex_kubernetes_cluster" "my_cluster" {
+  name        = "phpadmin"
   description = "description"
 
   network_id = "${yandex_vpc_network.ya-network.id}"
@@ -24,7 +24,7 @@ resource "yandex_kubernetes_cluster" "regional_cluster_resource_name" {
       }
     }
 
-    version   = "1.14"
+   version   = "1.21"
     public_ip = true
 
     maintenance_policy {
@@ -53,4 +53,11 @@ resource "yandex_kubernetes_cluster" "regional_cluster_resource_name" {
   }
 
   release_channel = "STABLE"
+  network_policy_provider = "CALICO"
+    kms_provider {
+    key_id = "${yandex_kms_symmetric_key.key-a.id}"
+    }
 }
+
+
+
