@@ -58,6 +58,14 @@ resource "yandex_kubernetes_cluster" "my_cluster" {
     key_id = "${yandex_kms_symmetric_key.key-a.id}"
     }
 }
+data "yandex_kubernetes_cluster" "my_cluster" {
+  name = "phpadmin"
+}
 
+output "cluster_external_v4_endpoint" {
+  value = "${data.yandex_kubernetes_cluster.my_cluster.master.0.external_v4_endpoint}"
+}
 
-
+output "cluster_id" {
+  value = "${data.yandex_kubernetes_cluster.my_cluster.id}"
+}
